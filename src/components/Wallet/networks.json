@@ -1,0 +1,108 @@
+[
+  {
+    "chainName": "Ethereum Mainnet",
+    "chainId": 1,
+    "nativeCurrency": {
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://mainnet.infura.io/v3"
+    ],
+    "blockExplorerUrls": [
+      "https://etherscan.io"
+    ],
+    "bridge" : "0xbee335BB44e75C4794a0b9B54E8027b111395943"
+  },
+  {
+    "chainName": "Arbitrum One",
+    "chainId": 42161,
+    "nativeCurrency": {
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://arb1.arbitrum.io/rpc"
+    ],
+    "blockExplorerUrls": [
+      "https://arbiscan.io"
+    ],
+    "bridge" : "0xbee335BB44e75C4794a0b9B54E8027b111395943"
+  },
+  {
+    "chainName": "Ethereum Sepolia",
+    "chainId": 11155111,
+    "nativeCurrency": {
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://rpc-sepolia.rockx.com"
+    ],
+    "blockExplorerUrls": [
+      "https://sepolia.etherscan.io/"
+    ],
+    "bridge" : "0x0aD89E552ed249a8A60729214e8F5e483f317F47"
+  },
+  {
+    "chainName": "BNB Smart Chain",
+    "chainId": 56,
+    "nativeCurrency": {
+      "symbol": "BNB",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://binance.llamarpc.com"
+    ],
+    "blockExplorerUrls": [
+      "https://bscscan.com"
+    ],
+    "bridge" : "0xbee335BB44e75C4794a0b9B54E8027b111395943"
+  },
+  {
+    "chainName": "Base",
+    "chainId": 8453,
+    "nativeCurrency": {
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://mainnet.base.org"
+    ],
+    "blockExplorerUrls": [
+      "https://basescan.org"
+    ],
+    "bridge" : "0xbee335BB44e75C4794a0b9B54E8027b111395943"
+  },
+  {
+    "chainName": "Mantle",
+    "chainId": 5000,
+    "nativeCurrency": {
+      "symbol": "MNT",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://rpc.ankr.com/mantle"
+    ],
+    "blockExplorerUrls": [
+      "https://explorer.mantle.xyz"
+    ],
+    "bridge" : "0xbee335BB44e75C4794a0b9B54E8027b111395943"
+  },
+  {
+    "chainName": "Mantle Sepolia",
+    "chainId": 5003,
+    "nativeCurrency": {
+      "symbol": "MNT",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://rpc.sepolia.mantle.xyz"
+    ],
+    "blockExplorerUrls": [
+      "https://explorer.sepolia.mantle.xyz/"
+    ],
+    "bridge" : "0x0aD89E552ed249a8A60729214e8F5e483f317F47"
+  }
+]
