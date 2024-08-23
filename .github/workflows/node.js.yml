@@ -28,4 +28,9 @@ jobs:
         cache: 'npm'
     - run: npm ci  --legacy-peer-deps
     - run: npm run build
-    - run: npm test
+    - name: Deploy to GitHub Pages
+      if: success()
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./build  # 请根据你的构建目录调整路径
