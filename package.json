@@ -1,6 +1,6 @@
 {
   "name": "fbtc_tool_webui",
-  "homepage": "https://blackfreighter404.github.io/FBTC-Tool-WebUI/"
+  "homepage": "https://blackfreighter404.github.io/FBTC-Tool-WebUI/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
