@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkfbtc_tool_webui=self.webpackChunkfbtc_tool_webui||[]).push([[9658],{9658:(e,t,u)=>{u.r(t),u.d(t,{default:()=>b.n});var b=u(33134)}}]);
