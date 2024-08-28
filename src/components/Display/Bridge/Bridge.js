@@ -1,6 +1,7 @@
 import React from "react";
 import { Table, TableRow, TableBody, Typography, TableCell, Divider, Box, Card } from "@mui/material";
-import { AddressTypo, TextTableCell } from "./CustomUtils";
+import { AddressTypo, TextTableCell } from "./../utils/CustomUtils";
+import BridgeButton from "./BridgeButton";
 
 const WhiteList = ({ data }) => {
     return (
@@ -60,6 +61,12 @@ const Bridge = ({ data }) => {
                     <TextTableCell data={'FireBridge'} />
                     <TextTableCell data={data?.bridge} address={data?.bridge} />
                 </TableRow>
+                {data?.bridge && <TableRow>
+                    <TextTableCell data={'Operation'} />
+                    <TableCell>
+                        <BridgeButton address={data?.bridge} />
+                    </TableCell>
+                </TableRow>}
                 <TableRow>
                     <TextTableCell data={'Owner'} />
                     <TextTableCell data={data?.ownerString} address={data?.ownerAddress} />

@@ -1,6 +1,5 @@
-import { assert, ethers, getNumber } from 'ethers';
-import networks from '../Wallet/networks.json';
-
+import networks from '../networks.json';
+import { getContract, isAddress } from 'viem';
 
 async function getABI(name) {
     const abi = await import(`./abi/${name}.json`);
@@ -13,13 +12,17 @@ class Viewer {
         "0x0110000000000000000000000000000000000000000000000000000000000000": "BTC XTN Testnet",
     }
 
-    constructor(context, setDataKV) {
-        const signer = context.signer;
-        const bridge = context.network.bridge;
-        this.network = context.network;
-        this.signer = signer;
-        this.bridgeAddr = bridge;
-
+    constructor(setDataKV, publicClient) {
+        const chainId = publicClient.chain.id;
+        for (let i = 0; i < networks.length; i++) {
+            if (networks[i].chainId === chainId) {
+                this.network = networks[i];
+                this.bridgeAddr = networks[i].bridge;
+                break;
+            }
+        }
+        console.log('Network', this.network);
+        this.publicClient = publicClient;
         this.dst_chains = [];
         this.merchats = [];
         this.FEE_RATE_BASE = 1_000_000;
@@ -46,32 +49,32 @@ class Viewer {
 
 
     async initContract() {
-        this.bridgeContract = new ethers.Contract(this.bridgeAddr, this.bridge_abi, this.signer);
-        this.fbtcAddr = await this.bridgeContract.fbtc();
-        this.fbtcContract = new ethers.Contract(this.fbtcAddr, this.fbtc_abi, this.signer);
-        this.minterAddr = await this.bridgeContract.minter();
-        this.minterContract = new ethers.Contract(this.minterAddr, this.minter_abi, this.signer);
-        this.feeModelAddr = await this.bridgeContract.feeModel();
-        this.feeModelContract = new ethers.Contract(this.feeModelAddr, this.feeModel_abi, this.signer);
+        this.bridgeContract = getContract({ abi: this.bridge_abi, address: this.bridgeAddr, client: this.publicClient });
+        this.fbtcAddr = await this.bridgeContract.read.fbtc();
+        this.fbtcContract = getContract({ abi: this.fbtc_abi, address: this.fbtcAddr, client: this.publicClient });
+        this.minterAddr = await this.bridgeContract.read.minter();
+        this.minterContract = getContract({ abi: this.minter_abi, address: this.minterAddr, client: this.publicClient });
+        this.feeModelAddr = await this.bridgeContract.read.feeModel();
+        this.feeModelContract = getContract({ abi: this.feeModel_abi, address: this.feeModelAddr, client: this.publicClient });
     }
 
     async addrName(addr, with_balance = false) {
         if (!addr) {
             return null;
         }
-        const code = await this.signer.provider.getCode(addr);
-        if (code === '0x') {
+        const code = await this.publicClient.getCode({ address: addr });
+        if (code == null) {
             if (with_balance) {
-                const eth = await this.signer.provider.getBalance(addr);
+                const eth = await this.publicClient.getBalance({address: addr});
                 return `${addr} EOA, Balance ${Number(eth) / 1e18} (${eth})`;
             } else {
                 return `${addr} EOA`;
             }
         } else {
-            const safe = new ethers.Contract(addr, this.safe_abi, this.signer);
+            const safe = getContract({ abi: this.safe_abi, address: addr, client: this.publicClient });
             try {
-                const owners = await safe.getOwners();
-                const threshold = await safe.getThreshold();
+                const owners = await safe.read.getOwners();
+                const threshold = await safe.read.getThreshold();
                 return `${addr} Safe  ${threshold}/${owners.length}`;
             } catch (e) {
                 return `${addr} Contract`;
@@ -85,12 +88,13 @@ class Viewer {
         if (chain in this.FBTC_CHAIN_ID_TO_NAME) {
             return `${this.FBTC_CHAIN_ID_TO_NAME[chain]} (${chain})`;
         } else {
-            const chainId = getNumber(chain);
+            const chainId = Number(chain);
             for (let i = 0; i < networks.length; i++) {
                 if (networks[i].chainId === chainId) {
                     return `${networks[i].chainName} (${chain})`;
                 }
             }
+            return `Unknown chain (${chain})`;
         }
     }
 
@@ -109,7 +113,7 @@ class Viewer {
 
     async getRoleList(contact, roleMethod, with_balance = true) {
         const role = await roleMethod();
-        const roleList = await contact.getRoleMembers(role);
+        const roleList = await contact.read.getRoleMembers([role]);
         console.log('roleList', roleList);
         const detailedList = await this.getAddressInfoList(roleList, with_balance);
         return detailedList;
@@ -131,16 +135,23 @@ class Viewer {
         const feeConfig = [];
         for (let i = 0; i < configs.length; i++) {
             const config = configs[i];
-            const name = config.name;
-            const maxFee = await this.to_btc(config.config[0]);
-            const minFee = await this.to_btc(config.config[1]);
-            const tiers = [];
-            for (let j = 0; j < config.config[2].length; j++) {
-                const tier = config.config[2][j];
-                const amount = await this.to_btc(tier[0]);
-                tiers.push(`< ${amount}: ${Number(tier[1]) * 100 / FEE_RATE_BASE} %`);
+            let name = config.name;
+            let address = null;
+            if (isAddress(name)) {
+                address = name;
+                name = await this.addrName(address);
+            } else if (name !== 'Default') {
+                name = await this.chainName(name);
             }
-            feeConfig.push({ name: name, maxFee: maxFee, minFee: minFee, tiers: tiers });
+            const maxFee = await this.to_btc(config.config.maxFee);
+            const minFee = await this.to_btc(config.config.minFee);
+            const tiers = [];
+            for (let j = 0; j < config.config.tiers.length; j++) {
+                const tier = config.config.tiers[j];
+                const amount = await this.to_btc(tier.amountTier);
+                tiers.push(`< ${amount}: ${Number(tier.feeRate) * 100 / FEE_RATE_BASE} %`);
+            }
+            feeConfig.push({ name: name, maxFee: maxFee, minFee: minFee, tiers: tiers, address: address });
         }
         console.log('feeConfig', feeConfig);
         return feeConfig;
@@ -158,49 +169,49 @@ class Viewer {
         bridge.bridge = this.bridgeAddr;
         this.setDataKV('bridge', bridge);
 
-        const ownerAddress = await this.bridgeContract.owner();
+        const ownerAddress = await this.bridgeContract.read.owner();
         const ownerString = await this.addrName(ownerAddress);
         bridge.ownerString = ownerString;
         bridge.ownerAddress = ownerAddress;
         this.setDataKV('bridge', bridge);
 
-        const pendingOwnerAddress = await this.bridgeContract.pendingOwner();
+        const pendingOwnerAddress = await this.bridgeContract.read.pendingOwner();
         const pendingOwnerString = await this.addrName(pendingOwnerAddress);
         bridge.pendingOwnerString = pendingOwnerString;
         bridge.pendingOwnerAddress = pendingOwnerAddress;
         this.setDataKV('bridge', bridge);
 
-        const paused = await this.bridgeContract.paused();
+        const paused = await this.bridgeContract.read.paused();
         bridge.paused = paused ? 'Yes' : 'No';
         this.setDataKV('bridge', bridge);
 
-        const fbtc = await this.bridgeContract.fbtc();
+        const fbtc = await this.bridgeContract.read.fbtc();
         bridge.fbtc = fbtc;
         this.setDataKV('bridge', bridge);
 
-        const minter = await this.bridgeContract.minter();
+        const minter = await this.bridgeContract.read.minter();
         bridge.minter = minter;
         this.setDataKV('bridge', bridge);
 
-        const feeModel = await this.bridgeContract.feeModel();
+        const feeModel = await this.bridgeContract.read.feeModel();
         bridge.feeModel = feeModel;
         this.setDataKV('bridge', bridge);
 
-        const feeRecipient = await this.bridgeContract.feeRecipient();
+        const feeRecipient = await this.bridgeContract.read.feeRecipient();
         const feeRecipientString = await this.addrName(feeRecipient);
         bridge.feeRecipient = feeRecipient;
         bridge.feeRecipientString = feeRecipientString;
         this.setDataKV('bridge', bridge);
 
-        const mc = await this.bridgeContract.MAIN_CHAIN();
+        const mc = await this.bridgeContract.read.MAIN_CHAIN();
         bridge.mainChain = await this.chainName(mc);
         this.setDataKV('bridge', bridge);
 
-        const cc = await this.bridgeContract.chain();
+        const cc = await this.bridgeContract.read.chain();
         bridge.chain = await this.chainName(cc);
         this.setDataKV('bridge', bridge);
 
-        this.dst_chains = await this.bridgeContract.getValidDstChains();
+        this.dst_chains = await this.bridgeContract.read.getValidDstChains();
         let whiteList = [];
         for (let i = 0; i < this.dst_chains.length; i++) {
             const chain = await this.chainName(this.dst_chains[i]);
@@ -209,19 +220,20 @@ class Viewer {
         bridge.whiteList = whiteList;
         this.setDataKV('bridge', bridge);
 
-        const users = await this.bridgeContract.getQualifiedUsers();
+        const users = await this.bridgeContract.read.getQualifiedUsers();
         this.merchats = users;
         let qualifiedUsers = [];
         for (let i = 0; i < users.length; i++) {
             let evmAddress = users[i];
             let evmAddressString = await this.addrName(evmAddress);
-            const info = await this.bridgeContract.getQualifiedUserInfo(evmAddress);
+            const info = await this.bridgeContract.read.getQualifiedUserInfo([evmAddress]);
+            console.log('info', info);
             let qualifiedUser = {
                 evmAddress: evmAddress,
                 evmAddressString: evmAddressString,
-                lock: info[0] ? 'Yes' : 'No',
-                btcDeposit: info[1],
-                btcWithdraw: info[2],
+                lock: info.locked ? 'Yes' : 'No',
+                btcDeposit: info.depositAddress,
+                btcWithdraw: info.withdrawalAddress,
             }
             qualifiedUsers.push(qualifiedUser);
         }
@@ -234,32 +246,32 @@ class Viewer {
         fbtc.address = this.fbtcAddr;
         this.setDataKV('fbtc', fbtc);
 
-        const bridge = await this.fbtcContract.bridge();
+        const bridge = await this.fbtcContract.read.bridge();
         fbtc.bridge = bridge;
         this.setDataKV('fbtc', fbtc);
 
-        const ownerAddress = await this.fbtcContract.owner();
+        const ownerAddress = await this.fbtcContract.read.owner();
         const ownerString = await this.addrName(ownerAddress);
         fbtc.ownerString = ownerString;
         fbtc.ownerAddress = ownerAddress;
         this.setDataKV('fbtc', fbtc);
 
-        const pendingOwnerAddress = await this.fbtcContract.pendingOwner();
+        const pendingOwnerAddress = await this.fbtcContract.read.pendingOwner();
         const pendingOwnerString = await this.addrName(pendingOwnerAddress);
         fbtc.pendingOwnerString = pendingOwnerString;
         fbtc.pendingOwnerAddress = pendingOwnerAddress;
         this.setDataKV('fbtc', fbtc);
 
-        const paused = await this.fbtcContract.paused();
+        const paused = await this.fbtcContract.read.paused();
         fbtc.paused = paused ? 'Yes' : 'No';
         this.setDataKV('fbtc', fbtc);
 
-        const dec = await this.fbtcContract.decimals();
+        const dec = await this.fbtcContract.read.decimals();
         fbtc.decimals = Number(dec);
         this.dec = Number(dec);
         this.setDataKV('fbtc', fbtc);
 
-        let totalSupply = await this.fbtcContract.totalSupply();
+        let totalSupply = await this.fbtcContract.read.totalSupply();
         totalSupply = Number(totalSupply)
 
         fbtc.totalSupply = await this.to_btc(totalSupply);
@@ -272,31 +284,31 @@ class Viewer {
         minter.fbtcMinter = fbtcMinter;
         this.setDataKV('minter', minter);
 
-        const ownerAddress = await this.minterContract.owner();
+        const ownerAddress = await this.minterContract.read.owner();
         const ownerString = await this.addrName(ownerAddress);
         minter.ownerString = ownerString;
         minter.ownerAddress = ownerAddress;
         this.setDataKV('minter', minter);
 
-        const pendingOwnerAddress = await this.minterContract.pendingOwner();
+        const pendingOwnerAddress = await this.minterContract.read.pendingOwner();
         const pendingOwnerString = await this.addrName(pendingOwnerAddress);
         minter.pendingOwnerString = pendingOwnerString;
         minter.pendingOwnerAddress = pendingOwnerAddress;
         this.setDataKV('minter', minter);
 
-        const bridge = await this.minterContract.bridge();
+        const bridge = await this.minterContract.read.bridge();
         minter.bridge = bridge;
         this.setDataKV('minter', minter);
 
-        const minting = await this.getRoleList.call(this, this.minterContract, this.minterContract.MINT_ROLE);
+        const minting = await this.getRoleList.call(this, this.minterContract, this.minterContract.read.MINT_ROLE);
         minter.minting = minting;
         this.setDataKV('minter', minter);
 
-        const burning = await this.getRoleList.call(this, this.minterContract, this.minterContract.BURN_ROLE);
+        const burning = await this.getRoleList.call(this, this.minterContract, this.minterContract.read.BURN_ROLE);
         minter.burning = burning;
         this.setDataKV('minter', minter);
 
-        const crossing = await this.getRoleList.call(this, this.minterContract, this.minterContract.CROSSCHAIN_ROLE);
+        const crossing = await this.getRoleList.call(this, this.minterContract, this.minterContract.read.CROSSCHAIN_ROLE);
         minter.crossing = crossing;
         this.setDataKV('minter', minter);
     }
@@ -307,43 +319,47 @@ class Viewer {
         fee.feeModel = feeModel;
         this.setDataKV('fee', fee);
 
-        const ownerAddress = await this.feeModelContract.owner();
+        const ownerAddress = await this.feeModelContract.read.owner();
         const ownerString = await this.addrName(ownerAddress);
         fee.ownerString = ownerString;
         fee.ownerAddress = ownerAddress;
         this.setDataKV('fee', fee);
 
-        const pendingOwnerAddress = await this.feeModelContract.pendingOwner();
+        const pendingOwnerAddress = await this.feeModelContract.read.pendingOwner();
         const pendingOwnerString = await this.addrName(pendingOwnerAddress);
         fee.pendingOwnerString = pendingOwnerString;
         fee.pendingOwnerAddress = pendingOwnerAddress;
         this.setDataKV('fee', fee);
 
-        const FEE_RATE_BASE = await this.feeModelContract.FEE_RATE_BASE();
+        const FEE_RATE_BASE = await this.feeModelContract.read.FEE_RATE_BASE();
         this.FEE_RATE_BASE = Number(FEE_RATE_BASE);
+        fee.FEE_RATE_BASE = this.FEE_RATE_BASE;
+        this.setDataKV('fee', fee);
 
         const MINT_OP = 1;
         const BURN_OP = 2;
         const CROSS_OP = 3;
 
         let configs = [];
-        const mint_config = await this.feeModelContract.getDefaultFeeConfig(MINT_OP);
+        const mint_config = await this.feeModelContract.read.getDefaultFeeConfig([MINT_OP]);
         configs.push({ name: 'Default', config: mint_config });
         fee.mint = await this.processFeeConfig(configs);
         this.setDataKV('fee', fee);
 
         configs = [];
-        const burn_config = await this.feeModelContract.getDefaultFeeConfig(BURN_OP);
+        const burn_config = await this.feeModelContract.read.getDefaultFeeConfig([BURN_OP]);
         configs.push({ name: 'Default', config: burn_config });
         if (!this.merchats) {
-            this.merchats = await this.bridgeContract.getQualifiedUsers();
+            this.merchats = await this.bridgeContract.read.getQualifiedUsers();
         }
+        console.log('merchats', this.merchats);
         for (let i = 0; i < this.merchats.length; i++) {
             try {
                 const merchant = this.merchats[i];
-                const merchant_config = await this.feeModelContract.getUserBurnFeeConfig(merchant);
+                const merchant_config = await this.feeModelContract.read.getUserBurnFeeConfig([merchant]);
                 configs.push({ name: this.merchats[i], config: merchant_config });
             } catch (e) {
+                console.log(e.message);
                 continue;
             }
         }
@@ -351,17 +367,19 @@ class Viewer {
         this.setDataKV('fee', fee);
 
         configs = [];
-        const cross_config = await this.feeModelContract.getDefaultFeeConfig(CROSS_OP);
+        const cross_config = await this.feeModelContract.read.getDefaultFeeConfig([CROSS_OP]);
         configs.push({ name: 'Default', config: cross_config });
         if (!this.dst_chains) {
-            this.dst_chains = await this.bridgeContract.getValidDstChains();
+            this.dst_chains = await this.bridgeContract.read.getValidDstChains();
         }
+        console.log('dst_chains', this.dst_chains);
         for (let i = 0; i < this.dst_chains.length; i++) {
             try {
                 const chain = this.dst_chains[i];
-                const cross_chain_config = await this.feeModelContract.getChainCrossFeeConfig(chain);
+                const cross_chain_config = await this.feeModelContract.read.getCrosschainFeeConfig([chain]);
                 configs.push({ name: this.dst_chains[i], config: cross_chain_config });
             } catch (e) {
+                console.log(e.message);
                 continue;
             }
         }
@@ -372,14 +390,14 @@ class Viewer {
     async getSafe() {
         const safe = this.safe;
 
-        const addr = await this.bridgeContract.owner();
+        const addr = await this.bridgeContract.read.owner();
         safe.ownerSafe = addr;
         this.setDataKV('safe', safe);
 
         let safeContract;
         try {
-            safeContract = new ethers.Contract(addr, this.safe_abi, this.signer);
-            const version = await safeContract.VERSION();
+            safeContract = new getContract({ abi: this.safe_abi, address: addr, client: this.publicClient });
+            const version = await safeContract.read.VERSION();
             safe.version = version;
             this.setDataKV('safe', safe);
         } catch (e) {
@@ -387,8 +405,8 @@ class Viewer {
             console.log(`FireBridge owner is not Safe wallet ${addr}`);
             return;
         }
-        const ownerAddresses = await safeContract.getOwners();
-        const threshold = await safeContract.getThreshold();
+        const ownerAddresses = await safeContract.read.getOwners();
+        const threshold = await safeContract.read.getThreshold();
         safe.threshold = `${threshold}/${ownerAddresses.length}`;
         this.setDataKV('safe', safe);
 
@@ -397,23 +415,30 @@ class Viewer {
         this.setDataKV('safe', safe);
 
         const ONE = "0x0000000000000000000000000000000000000001"
-        let modules = await safeContract.getModulesPaginated(ONE, 1000);
-        console.log('Find ModulesLength', modules.length);
-        assert(modules[1] === ONE, 'Too Many Modules');
+        let modules = await safeContract.read.getModulesPaginated([ONE, 1000]);
+        console.log('Find Modules', modules);
+        if (modules[1] !== ONE) {
+            console.log('Too Many Modules');
+        }
 
         modules = modules[0];
         const moduleList = [];
         for (let i = 0; i < modules.length; i++) {
             const module = modules[i];
             try {
-                const fbtcGovernorModule = new ethers.Contract(module, this.fbtcGovernorModule_abi, this.signer);
-                const qualiManagers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.USER_MANAGER_ROLE, false);
-                const blockManagers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.LOCKER_ROLE, false);
-                const fbtcPausers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.FBTC_PAUSER_ROLE, false);
-                const fbridgePausers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.BRIDGE_PAUSER_ROLE, false);
-                const targetsManagers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.CHAIN_MANAGER_ROLE, false);
-                const feeUpdaters = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.FEE_UPDATER_ROLE, false);
-                moduleList.push({ address: module, isGover: true, qualiManagers: qualiManagers, blockManagers: blockManagers, fbtcPausers: fbtcPausers, fbridgePausers: fbridgePausers, targetsManagers: targetsManagers, feeUpdaters: feeUpdaters });
+                const fbtcGovernorModule = new getContract({ abi: this.fbtcGovernorModule_abi, address: module, client: this.publicClient });
+                const qualiManagers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.read.USER_MANAGER_ROLE, false);
+                const blockManagers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.read.LOCKER_ROLE, false);
+                const fbtcPausers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.read.FBTC_PAUSER_ROLE, false);
+                const fbridgePausers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.read.BRIDGE_PAUSER_ROLE, false);
+                const targetsManagers = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.read.CHAIN_MANAGER_ROLE, false);
+                const feeUpdaters = await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.read.FEE_UPDATER_ROLE, false);
+                const ownerAddress = await fbtcGovernorModule.read.owner();
+                const ownerString = await this.addrName(ownerAddress);
+                const pendingOwnerAddress = await fbtcGovernorModule.read.pendingOwner();
+                const pendingOwnerString = await this.addrName(pendingOwnerAddress);
+
+                moduleList.push({ address: module, isGover: true, qualiManagers: qualiManagers, blockManagers: blockManagers, fbtcPausers: fbtcPausers, fbridgePausers: fbridgePausers, targetsManagers: targetsManagers, feeUpdaters: feeUpdaters, ownerString: ownerString, ownerAddress: ownerAddress, pendingOwnerString: pendingOwnerString, pendingOwnerAddress: pendingOwnerAddress });
             } catch (e) {
                 console.log(e.message);
                 console.log(`Module ${module} is not a FBTCGovernorModule`);
@@ -422,7 +447,6 @@ class Viewer {
             }
         }
         safe.modules = moduleList;
-        console.log('modules', moduleList);
         this.setDataKV('safe', safe);
     }
 }
@@ -431,18 +455,27 @@ class Viewer {
 
 
 
-const fetchData = async (setDataKV, context) => {
-    const viewer = new Viewer(context, setDataKV);
+const fetchData = async (setDataKV, publicClient) => {
+    const viewer = new Viewer(setDataKV, publicClient);
     await viewer.initABI();
+    console.log('InitABI done');
     await viewer.initContract();
+    console.log('InitContract done');
     await viewer.getChain();
+    console.log('getChain done');
     await viewer.getBridge();
+    console.log('getBridge done');
     await viewer.getFBTC();
+    console.log('getFBTC done');
     await viewer.getMinter();
+    console.log('getMinter done');
     await viewer.getFee();
+    console.log('getFee done');
     await viewer.getSafe();
+    console.log('getSafe done');
     console.log('FetchData done');
 }
 
 
 export default fetchData;
+export { getABI };

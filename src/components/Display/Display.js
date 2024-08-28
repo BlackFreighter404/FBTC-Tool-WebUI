@@ -1,14 +1,15 @@
-import { React, useContext, useState, useEffect } from 'react';
+import { React, useState, useEffect, useContext, useMemo } from 'react';
 import { Box, Paper } from '@mui/material';
-import { Context } from '../../Context';
 import Chain from './Chain';
-import Bridge from './Bridge';
+import Bridge from './Bridge/Bridge';
 import Fbtc from './Fbtc';
 import Minter from './Minter';
 import Fee from './Fee';
-import Safe from './Safe';
-import fetchData from './FetchData';
-
+import Safe from './Safe/Safe';
+import fetchData from './utils/FetchData';
+import { useAccount, usePublicClient } from 'wagmi';
+import { customNetworkContext } from '../../App';
+import { createPublicClient, http } from 'viem';
 
 const Display = () => {
     const [data, setData] = useState({});
@@ -19,18 +20,32 @@ const Display = () => {
         });
     }
 
-    const context = useContext(Context);
-    
+    const account = useAccount();
+    const pc = usePublicClient();
+    const obj = useContext(customNetworkContext);
+
+    const publicClient = useMemo(() => {
+        if (account.status !== 'connected') {
+            if (obj.customNetwork !== null) {
+                return createPublicClient({ chain: obj.customNetwork, transport: http() });
+            }
+            return undefined;
+        }
+        return pc;
+    }, [account.status, obj.customNetwork, pc]);
+
+
     useEffect(() => {
-        console.log('context', context);
-        if (context?.signer && context?.network) {
+        if (publicClient !== undefined) {
             const fetchDataAsync = async () => {
+                setData({});
                 console.log('fetching data');
-                await fetchData(setDataKV, context);
+                console.log(publicClient);
+                await fetchData(setDataKV, publicClient);
             }
             fetchDataAsync();
         }
-    }, [context]);
+    }, [publicClient]);
 
 
     return (

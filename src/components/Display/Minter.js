@@ -1,6 +1,6 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableRow, Typography } from "@mui/material";
-import { AddressTypo, TextTableCell } from "./CustomUtils";
+import { AddressTypo, TextTableCell } from "./utils/CustomUtils";
 
 
 const Role = ({ data, text }) => {

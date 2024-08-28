@@ -38,7 +38,7 @@
       "decimals": 18
     },
     "rpcUrls": [
-      "https://rpc-sepolia.rockx.com"
+      "https://rpc.sepolia.org"
     ],
     "blockExplorerUrls": [
       "https://sepolia.etherscan.io/"
@@ -101,7 +101,7 @@
       "https://rpc.sepolia.mantle.xyz"
     ],
     "blockExplorerUrls": [
-      "https://explorer.sepolia.mantle.xyz/"
+      "https://explorer.sepolia.mantle.xyz"
     ],
     "bridge" : "0x0aD89E552ed249a8A60729214e8F5e483f317F47"
   }

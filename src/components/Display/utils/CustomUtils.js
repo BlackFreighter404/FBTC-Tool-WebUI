@@ -1,10 +1,23 @@
 import { TableCell, Typography, Link } from "@mui/material";
-import React, { useContext } from "react";
-import { Context } from "../../Context";
-
+import React, { useEffect } from "react";
+import { useChainId } from "wagmi";
+import networks from '../networks.json';
 
 const AddressTypo = ({ text, address, ...typographyProps }) => {
-    const explorerUrl = useContext(Context).network.blockExplorerUrls[0];
+    const [explorerUrl, setExplorerUrl] = React.useState(null);
+    const chainId = useChainId();
+    useEffect(() => {
+        const fetchExplorerUrl = async () => {
+            for (let i = 0; i < networks.length; i++) {
+                if (networks[i].chainId === chainId) {
+                    setExplorerUrl(networks[i].blockExplorerUrls[0]);
+                    return;
+                }
+            }
+            console.log('ChainId not found', chainId);
+        };
+        fetchExplorerUrl();
+    }, [chainId]);
     return (
         <Typography component="span" {...typographyProps}>
             <Link href={`${explorerUrl}/address/${address}`} underline="hover" color="inherit" rel="noopener" target="_blank">
@@ -38,7 +51,7 @@ const TextTableCell = ({ data, address, ...typographyProps }) => {
     return (
         <TableCell>
             {address != null ? (
-                <AddressTypo text={data} address={address} typographyProps={typographyProps} />
+                <AddressTypo text={data} address={address}  {...typographyProps}  />
             ) : (
                 <Typography {...typographyProps}>{data}</Typography>
             )}
