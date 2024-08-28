@@ -13,7 +13,7 @@ import { createPublicClient, http } from 'viem';
 
 const Display = () => {
     const [data, setData] = useState({});
-
+    const [currentNetwork, setCurrentNetwork] = useState(null);
     const setDataKV = (key, value) => {
         setData((prev) => {
             return { ...prev, [key]: value };
@@ -22,30 +22,34 @@ const Display = () => {
 
     const account = useAccount();
     const pc = usePublicClient();
-    const obj = useContext(customNetworkContext);
+    const {customNetwork} = useContext(customNetworkContext);
 
     const publicClient = useMemo(() => {
         if (account.status !== 'connected') {
-            if (obj.customNetwork !== null) {
-                return createPublicClient({ chain: obj.customNetwork, transport: http() });
+            if (customNetwork !== null) {
+                return createPublicClient({ chain: customNetwork, transport: http() });
             }
             return undefined;
         }
         return pc;
-    }, [account.status, obj.customNetwork, pc]);
+    }, [account.status, customNetwork, pc]);
 
 
     useEffect(() => {
         if (publicClient !== undefined) {
             const fetchDataAsync = async () => {
+                if (currentNetwork === publicClient.chain.name) {
+                    return;
+                }
                 setData({});
                 console.log('fetching data');
                 console.log(publicClient);
                 await fetchData(setDataKV, publicClient);
+                setCurrentNetwork(publicClient.chain.name);
             }
             fetchDataAsync();
         }
-    }, [publicClient]);
+    }, [publicClient, currentNetwork]);
 
 
     return (
