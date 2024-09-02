@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/FBTC-Tool-WebUI/static/css/main.10894907.css",
-    "main.js": "/FBTC-Tool-WebUI/static/js/main.918bb424.js",
+    "main.js": "/FBTC-Tool-WebUI/static/js/main.ed7fe7e7.js",
     "static/js/3326.eb5d777c.chunk.js": "/FBTC-Tool-WebUI/static/js/3326.eb5d777c.chunk.js",
     "static/js/9658.e04e44c9.chunk.js": "/FBTC-Tool-WebUI/static/js/9658.e04e44c9.chunk.js",
     "static/js/3631.92e2a587.chunk.js": "/FBTC-Tool-WebUI/static/js/3631.92e2a587.chunk.js",
@@ -65,23 +65,23 @@
     "static/js/9432.6b0d9624.chunk.js": "/FBTC-Tool-WebUI/static/js/9432.6b0d9624.chunk.js",
     "static/js/4147.8788aea2.chunk.js": "/FBTC-Tool-WebUI/static/js/4147.8788aea2.chunk.js",
     "static/js/9466.1baca77c.chunk.js": "/FBTC-Tool-WebUI/static/js/9466.1baca77c.chunk.js",
-    "static/js/9261.ae7cff01.chunk.js": "/FBTC-Tool-WebUI/static/js/9261.ae7cff01.chunk.js",
-    "static/js/6419.96b172c5.chunk.js": "/FBTC-Tool-WebUI/static/js/6419.96b172c5.chunk.js",
-    "static/js/107.bd7dd812.chunk.js": "/FBTC-Tool-WebUI/static/js/107.bd7dd812.chunk.js",
-    "static/js/5842.3be65527.chunk.js": "/FBTC-Tool-WebUI/static/js/5842.3be65527.chunk.js",
-    "static/js/5693.800a7062.chunk.js": "/FBTC-Tool-WebUI/static/js/5693.800a7062.chunk.js",
-    "static/js/7241.7a12cd60.chunk.js": "/FBTC-Tool-WebUI/static/js/7241.7a12cd60.chunk.js",
-    "static/js/7709.7c4b0ba0.chunk.js": "/FBTC-Tool-WebUI/static/js/7709.7c4b0ba0.chunk.js",
+    "static/js/6365.e980fe9d.chunk.js": "/FBTC-Tool-WebUI/static/js/6365.e980fe9d.chunk.js",
+    "static/js/5235.f3e1c679.chunk.js": "/FBTC-Tool-WebUI/static/js/5235.f3e1c679.chunk.js",
+    "static/js/2011.08943e6b.chunk.js": "/FBTC-Tool-WebUI/static/js/2011.08943e6b.chunk.js",
+    "static/js/8258.4fee09e0.chunk.js": "/FBTC-Tool-WebUI/static/js/8258.4fee09e0.chunk.js",
+    "static/js/7469.4a11972b.chunk.js": "/FBTC-Tool-WebUI/static/js/7469.4a11972b.chunk.js",
+    "static/js/2905.5e948ed7.chunk.js": "/FBTC-Tool-WebUI/static/js/2905.5e948ed7.chunk.js",
+    "static/js/5469.9adc5419.chunk.js": "/FBTC-Tool-WebUI/static/js/5469.9adc5419.chunk.js",
     "static/js/4348.f6e9c631.chunk.js": "/FBTC-Tool-WebUI/static/js/4348.f6e9c631.chunk.js",
     "static/js/8541.a9f2a916.chunk.js": "/FBTC-Tool-WebUI/static/js/8541.a9f2a916.chunk.js",
     "static/js/8880.6440fe03.chunk.js": "/FBTC-Tool-WebUI/static/js/8880.6440fe03.chunk.js",
-    "static/js/6151.5bfc4d1e.chunk.js": "/FBTC-Tool-WebUI/static/js/6151.5bfc4d1e.chunk.js",
+    "static/js/6151.f334f4d7.chunk.js": "/FBTC-Tool-WebUI/static/js/6151.f334f4d7.chunk.js",
     "static/js/7140.8781d8ad.chunk.js": "/FBTC-Tool-WebUI/static/js/7140.8781d8ad.chunk.js",
     "static/js/2267.199883ce.chunk.js": "/FBTC-Tool-WebUI/static/js/2267.199883ce.chunk.js",
     "index.html": "/FBTC-Tool-WebUI/index.html"
   },
   "entrypoints": [
     "static/css/main.10894907.css",
-    "static/js/main.918bb424.js"
+    "static/js/main.ed7fe7e7.js"
   ]
 }
