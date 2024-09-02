@@ -4,18 +4,18 @@ import { useChainId } from "wagmi";
 import networks from './networks.json';
 
 const BTC_EXPLORER_MAP = {
-    '0x0100000000000000000000000000000000000000000000000000000000000000' : 'https://mempool.space',
-    '0x0110000000000000000000000000000000000000000000000000000000000000' : 'https://mempool.space/testnet',
+    '0x0100000000000000000000000000000000000000000000000000000000000000': 'https://mempool.space',
+    '0x0110000000000000000000000000000000000000000000000000000000000000': 'https://mempool.space/testnet',
 }
 
 
 
-const AddressTypo = ({ text, address, chainId=null, ...typographyProps }) => {
+const AddressTypo = ({ text, address, chainId = null, ...typographyProps }) => {
     let explorerUrl = null;
     const globalChainId = useChainId();
     if (chainId == null) chainId = globalChainId;
 
-    if (chainId in BTC_EXPLORER_MAP){
+    if (chainId in BTC_EXPLORER_MAP) {
         explorerUrl = BTC_EXPLORER_MAP[chainId];
     }
     else {
@@ -28,7 +28,7 @@ const AddressTypo = ({ text, address, chainId=null, ...typographyProps }) => {
     }
 
     return (
-        <Typography component="span" {...typographyProps}>
+        <Typography component="span" {...typographyProps} style={{ fontWeight: 'bold' }}>
             <Link href={`${explorerUrl}/address/${address}`} underline="hover" color="inherit" rel="noopener" target="_blank">
                 {text}
             </Link>
@@ -55,12 +55,12 @@ const AddressList = ({ data }) => {
     );
 }
 
-const TextTableCell = ({ data, address, chainId=null, ...typographyProps }) => {
+const TextTableCell = ({ data, address, chainId = null, ...typographyProps }) => {
     if (data == null) data = "Loading...";
     return (
-        <TableCell>
+        <TableCell style={{ whiteSpace: 'normal', wordBreak: 'break-word' }} sx={{ minWidth: '100px' }}>
             {address != null ? (
-                <AddressTypo text={data} address={address} chainId={chainId} {...typographyProps}  />
+                <AddressTypo text={data} address={address} chainId={chainId} {...typographyProps} />
             ) : (
                 <Typography {...typographyProps}>{data}</Typography>
             )}

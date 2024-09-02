@@ -18,7 +18,7 @@ const GoverPanel = ({ data }) => {
                     <Box display='flex' justifyContent='center' alignItems='center' flexDirection='column' gap={1} p={1}>
                         <AddressTypo variant="h5" gutterBottom address={address} text={address} />
                         <Card elevation={3} sx={{ minWidth: '85vw', maxWidth: '85vw', p: 1, backgroundColor: 'lightyellow' }}>
-                            <Panel address={address} func={updateUserBurnFee} abi={goverABI} />
+                            <Panel address={address} func={updateUserBurnFee} abi={goverABI} text={'updateUserBurnFee (default all-zero)'}/>
                         </Card>
                         <Card elevation={3} sx={{ minWidth: '85vw', maxWidth: '85vw', p: 1, backgroundColor: 'lightyellow' }}>
                             <Panel address={address} func={addQualifiedUser} abi={goverABI} />

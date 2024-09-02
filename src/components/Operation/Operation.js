@@ -7,6 +7,7 @@ import GoverPanel from './GoverPanel';
 
 const Operation = () => {
     const data = useFetchData(fetchOperationData);
+    console.log(data);
     return (
         <Box display='flex' justifyContent='center' alignItems='center' flexDirection='column' gap={1}>
             <Paper elevation={3} sx={{ minWidth: '90vw', maxWidth: '90vw', minHeight: '30vh' }}>
