@@ -7,7 +7,7 @@ import Request from "./components/Request/Request";
 
 function Router() {
     return (
-        <Routes>
+        <Routes basename = {process.env.PUBLIC_URL}>
             <Route path="/" element={<Display />} />
             <Route path="/display" element={<Display />} />
             <Route path="/operation" element={<Operation />} />
