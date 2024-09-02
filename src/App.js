@@ -12,17 +12,18 @@ import { Link, useLocation } from 'react-router-dom';
 const customNetworkContext = createContext();
 
 function App() {
-    const basename = process.env.PUBLIC_URL;
     const queryClient = new QueryClient();
     const [customNetwork, setCustomNetwork] = useState(null);
     const location = useLocation();
+    const basename = process.env.PUBLIC_URL;
+
     const getTabValue = () => {
         switch (location.pathname) {
-            case '/display':
+            case `${basename}/display`:
                 return 0;
-            case '/operation':
+            case `${basename}/operation`:
                 return 1;
-            case '/request':
+            case `${basename}/request`:
                 return 2;
             default:
                 return 0;
