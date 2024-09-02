@@ -8,10 +8,10 @@ import Request from "./components/Request/Request";
 function Router() {
     return (
         <Routes>
-            <Route path="/" element={<Display />} />
-            <Route path="/display" element={<Display />} />
-            <Route path="/operation" element={<Operation />} />
-            <Route path="/request" element={<Request />} />
+            <Route exact path="/" element={<Display />} />
+            <Route exact path="/display" element={<Display />} />
+            <Route exact path="/operation" element={<Operation />} />
+            <Route exact path="/request" element={<Request />} />
         </Routes>
     );
 }
