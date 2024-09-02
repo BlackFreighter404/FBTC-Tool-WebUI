@@ -1,5 +1,7 @@
-import networks from '../networks.json';
-import { getContract, isAddress } from 'viem';
+import networks from './networks.json';
+import { getContract, hexToString, isAddress } from 'viem';
+import { createPublicClient, http } from 'viem';
+import config from '../Config';
 
 async function getABI(name) {
     const abi = await import(`./abi/${name}.json`);
@@ -11,7 +13,14 @@ class Viewer {
         "0x0100000000000000000000000000000000000000000000000000000000000000": "BTC Mainnet",
         "0x0110000000000000000000000000000000000000000000000000000000000000": "BTC XTN Testnet",
     }
-
+    OP = {
+        0: "Nop",
+        1: "Mint",
+        2: "Burn",
+        3: "CrosschainRequest",
+        4: "CrosschainConfirm",
+    }
+    STATUS = { 0: "Unused", 1: "Pending", 2: "Confirmed", 3: "Rejected" }
     constructor(setDataKV, publicClient) {
         const chainId = publicClient.chain.id;
         for (let i = 0; i < networks.length; i++) {
@@ -65,7 +74,7 @@ class Viewer {
         const code = await this.publicClient.getCode({ address: addr });
         if (code == null) {
             if (with_balance) {
-                const eth = await this.publicClient.getBalance({address: addr});
+                const eth = await this.publicClient.getBalance({ address: addr });
                 return `${addr} EOA, Balance ${Number(eth) / 1e18} (${eth})`;
             } else {
                 return `${addr} EOA`;
@@ -111,10 +120,19 @@ class Viewer {
 
     }
 
+    async parseAddress(address, chainIdStr){
+        if (chainIdStr in this.FBTC_CHAIN_ID_TO_NAME) {
+            return hexToString(address);
+        } else {
+            return "0x" + address.slice(26, 66);
+        }
+    }
+
+
     async getRoleList(contact, roleMethod, with_balance = true) {
         const role = await roleMethod();
         const roleList = await contact.read.getRoleMembers([role]);
-        console.log('roleList', roleList);
+        //console.log('roleList', roleList);
         const detailedList = await this.getAddressInfoList(roleList, with_balance);
         return detailedList;
     }
@@ -416,7 +434,7 @@ class Viewer {
 
         const ONE = "0x0000000000000000000000000000000000000001"
         let modules = await safeContract.read.getModulesPaginated([ONE, 1000]);
-        console.log('Find Modules', modules);
+        //console.log('Find Modules', modules);
         if (modules[1] !== ONE) {
             console.log('Too Many Modules');
         }
@@ -449,13 +467,102 @@ class Viewer {
         safe.modules = moduleList;
         this.setDataKV('safe', safe);
     }
+
+    async getDataForOperation() {
+        const bridge = this.bridge;
+        bridge.address = this.bridgeAddr;
+        bridge.whiteList = await this.bridgeContract.read.getValidDstChains();
+        this.dst_chains = await this.bridgeContract.read.getValidDstChains();
+        let whiteList = [];
+        for (let i = 0; i < this.dst_chains.length; i++) {
+            const chain = await this.chainName(this.dst_chains[i]);
+            whiteList.push({ key: chain, value: this.dst_chains[i] });
+        }
+        bridge.whiteList = whiteList;
+        const gover = {};
+        gover.address = [];
+        const addr = await this.bridgeContract.read.owner();
+        let safeContract;
+        try {
+            safeContract = new getContract({ abi: this.safe_abi, address: addr, client: this.publicClient });
+            await safeContract.read.VERSION();
+        } catch (e) {
+            console.log(`FireBridge owner is not Safe wallet ${addr}`);
+            return;
+        }
+
+        const ONE = "0x0000000000000000000000000000000000000001"
+        let modules = await safeContract.read.getModulesPaginated([ONE, 1000]);
+        console.log('Find Modules', modules);
+        if (modules[1] !== ONE) {
+            console.log('Too Many Modules');
+        }
+
+        modules = modules[0];
+        for (let i = 0; i < modules.length; i++) {
+            const module = modules[i];
+            try {
+                const fbtcGovernorModule = new getContract({ abi: this.fbtcGovernorModule_abi, address: module, client: this.publicClient });
+                await this.getRoleList.call(this, fbtcGovernorModule, fbtcGovernorModule.read.CHAIN_MANAGER_ROLE, false);
+                gover.address.push(module);
+            } catch (e) {
+                console.log(e.message);
+                console.log(`Module ${module} is not a FBTCGovernorModule`);
+                continue;
+            }
+        }
+        this.setDataKV('bridge', bridge);
+        this.setDataKV('gover', gover);
+    }
+
+    async getRequestData(queryNum) {
+        const bridge = getContract({ abi: this.bridge_abi, address: this.bridgeAddr, client: this.publicClient });
+        const nonce = await bridge.read.nonce();
+        const end = Number(nonce) - 1;
+        const start = end - 100 + 1;
+        let reqs = await bridge.read.getRequestsByIdRange([start, end]);
+        reqs = reqs.reverse().slice(0, queryNum);
+        console.log('reqs', reqs);
+        await Promise.all(reqs.map(async req => {
+            req.hash = await bridge.read.requestHashes([req.nonce]);
+            req.nonce = Number(req.nonce);
+            req.fee = Number(req.fee);
+            req.amount = Number(req.amount);
+            req.src_chain_id = Number(req.srcChain);
+            req.dst_chain_id = Number(req.dstChain);
+            if (req.status === 1) {
+                req.totalStatus = 'Pending';
+            } else if (req.op === 3) {
+                const chain = config.chains.find((c) => c.id === req.dst_chain_id);
+                const network = networks.find((n) => n.chainId === req.dst_chain_id);
+                const dst_chain_publicClient = createPublicClient({ chain: chain, transport: http() });
+                const dst_bridge = getContract({ abi: this.bridge_abi, address: network.bridge, client: dst_chain_publicClient });
+                const dst_hash = await dst_bridge.read.crosschainRequestConfirmation([req.hash]);
+                if (dst_hash === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                    req.totalStatus = 'Pending';
+                } else {
+                    req.totalStatus = `Confirmed: ${dst_hash}`;
+                }
+            } else {
+                req.totalStatus = `Confirmed`
+            }
+
+            req.op = `${req.op} (${this.OP[req.op]})`;
+            req.status = `${req.status} (${this.STATUS[req.status]})`;
+            req.srcAddress = await this.parseAddress(req.srcAddress, req.srcChain);
+            req.dstAddress = await this.parseAddress(req.dstAddress, req.dstChain);
+            req.srcChain = await this.chainName(req.srcChain);
+            req.dstChain = await this.chainName(req.dstChain);
+        }));
+        return { reqs: reqs };
+    }
 }
 
 
 
 
 
-const fetchData = async (setDataKV, publicClient) => {
+const fetchDisplayData = async (setDataKV, publicClient) => {
     const viewer = new Viewer(setDataKV, publicClient);
     await viewer.initABI();
     console.log('InitABI done');
@@ -476,6 +583,24 @@ const fetchData = async (setDataKV, publicClient) => {
     console.log('FetchData done');
 }
 
+const fetchOperationData = async (setDataKV, publicClient) => {
+    const viewer = new Viewer(setDataKV, publicClient);
+    await viewer.initABI();
+    console.log('InitABI done');
+    await viewer.initContract();
+    await viewer.getDataForOperation();
+    console.log('FetchData done');
+}
 
-export default fetchData;
-export { getABI };
+const fetchRequestData = async (setDataKV, publicClient, queryNum) => {
+    const viewer = new Viewer(setDataKV, publicClient);
+    await viewer.initABI();
+    console.log('InitABI done');
+    const fetchData = await viewer.getRequestData(queryNum);
+    console.log('FetchData done');
+    return fetchData;
+}
+
+
+
+export { getABI, fetchDisplayData, fetchOperationData, fetchRequestData };

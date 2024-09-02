@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Card, Divider, Table, TableBody, TableCell, TableRow, Typography } from "@mui/material";
-import { TextTableCell, AddressTypo } from "./utils/CustomUtils";
+import { TextTableCell, AddressTypo } from "../../utils/CustomUtils";
 
 
 const FeeTiers = ({ data, type }) => {

@@ -1,56 +1,16 @@
-import { React, useState, useEffect, useContext, useMemo } from 'react';
+import { React } from 'react';
 import { Box, Paper } from '@mui/material';
 import Chain from './Chain';
-import Bridge from './Bridge/Bridge';
+import Bridge from './Bridge';
 import Fbtc from './Fbtc';
 import Minter from './Minter';
 import Fee from './Fee';
-import Safe from './Safe/Safe';
-import fetchData from './utils/FetchData';
-import { useAccount, usePublicClient } from 'wagmi';
-import { customNetworkContext } from '../../App';
-import { createPublicClient, http } from 'viem';
+import Safe from './Safe';
+import {fetchDisplayData} from '../../utils/FetchData';
+import useFetchData from '../../utils/Hooks';
 
 const Display = () => {
-    const [data, setData] = useState({});
-    const [currentNetwork, setCurrentNetwork] = useState(null);
-    const setDataKV = (key, value) => {
-        setData((prev) => {
-            return { ...prev, [key]: value };
-        });
-    }
-
-    const account = useAccount();
-    const pc = usePublicClient();
-    const {customNetwork} = useContext(customNetworkContext);
-
-    const publicClient = useMemo(() => {
-        if (account.status !== 'connected') {
-            if (customNetwork !== null) {
-                return createPublicClient({ chain: customNetwork, transport: http() });
-            }
-            return undefined;
-        }
-        return pc;
-    }, [account.status, customNetwork, pc]);
-
-
-    useEffect(() => {
-        if (publicClient !== undefined) {
-            const fetchDataAsync = async () => {
-                if (currentNetwork === publicClient.chain.name) {
-                    return;
-                }
-                setData({});
-                console.log('fetching data');
-                console.log(publicClient);
-                await fetchData(setDataKV, publicClient);
-                setCurrentNetwork(publicClient.chain.name);
-            }
-            fetchDataAsync();
-        }
-    }, [publicClient, currentNetwork]);
-
+    const data = useFetchData(fetchDisplayData);
 
     return (
         <Box display='flex' justifyContent='center' alignItems='center' flexDirection='column' gap={2}>

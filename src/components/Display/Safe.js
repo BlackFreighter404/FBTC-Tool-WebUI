@@ -1,7 +1,6 @@
 import React from "react";
 import { Box, Card, Divider, Table, TableBody, TableCell, TableRow, Typography } from "@mui/material";
-import { AddressTypo, TextTableCell, AddressList } from "../utils/CustomUtils";
-import SafeButton from "./SafeButton";
+import { AddressTypo, TextTableCell, AddressList } from "../../utils/CustomUtils";
 
 
 
@@ -26,12 +25,11 @@ const Modules = ({ data }) => {
                     data ? (
                         data.map((item, index) => (
                             <React.Fragment key={index}>
-                                <Card sx={{ padding: 1, margin: 1, backgroundColor: 'lightpink', gap: 2 }}>
+                                <Card sx={{ padding: 1, margin: 1, backgroundColor: 'honeydew', gap: 2 }}>
                                     <AddressTypo text={item.address} address={item.address} />
                                     {
                                         item.isGover ? (
                                             <Box display={'flex'} flexDirection={'column'} gap={1} mt={1}>
-                                                <SafeButton address={item.address} />
                                                 <AddressTypo text={`Owner: ${item.ownerString}`} address={item.ownerAddress} />
                                                 <AddressTypo text={`Pending Owner: ${item.pendingOwnerString}`} address={item?.pendingOwnerAddress} />
                                                 <Box marginLeft={2}>

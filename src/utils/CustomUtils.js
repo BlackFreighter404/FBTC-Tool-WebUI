@@ -1,23 +1,32 @@
 import { TableCell, Typography, Link } from "@mui/material";
-import React, { useEffect } from "react";
+import React from "react";
 import { useChainId } from "wagmi";
-import networks from '../networks.json';
+import networks from './networks.json';
 
-const AddressTypo = ({ text, address, ...typographyProps }) => {
-    const [explorerUrl, setExplorerUrl] = React.useState(null);
-    const chainId = useChainId();
-    useEffect(() => {
-        const fetchExplorerUrl = async () => {
-            for (let i = 0; i < networks.length; i++) {
-                if (networks[i].chainId === chainId) {
-                    setExplorerUrl(networks[i].blockExplorerUrls[0]);
-                    return;
-                }
+const BTC_EXPLORER_MAP = {
+    1 : 'https://mempool.space',
+    3 : 'https://mempool.space/testnet',
+}
+
+
+
+const AddressTypo = ({ text, address, chainId=null, ...typographyProps }) => {
+    let explorerUrl = null;
+    const globalChainId = useChainId();
+    if (chainId == null) chainId = globalChainId;
+
+    if (chainId in BTC_EXPLORER_MAP){
+        explorerUrl = BTC_EXPLORER_MAP[chainId];
+    }
+    else {
+        for (let i = 0; i < networks.length; i++) {
+            if (networks[i].chainId === chainId) {
+                explorerUrl = networks[i].blockExplorerUrls[0];
+                break;
             }
-            console.log('ChainId not found', chainId);
-        };
-        fetchExplorerUrl();
-    }, [chainId]);
+        }
+    }
+
     return (
         <Typography component="span" {...typographyProps}>
             <Link href={`${explorerUrl}/address/${address}`} underline="hover" color="inherit" rel="noopener" target="_blank">
@@ -46,12 +55,12 @@ const AddressList = ({ data }) => {
     );
 }
 
-const TextTableCell = ({ data, address, ...typographyProps }) => {
+const TextTableCell = ({ data, address, chainId=null, ...typographyProps }) => {
     if (data == null) data = "Loading...";
     return (
         <TableCell>
             {address != null ? (
-                <AddressTypo text={data} address={address}  {...typographyProps}  />
+                <AddressTypo text={data} address={address} chainId={chainId} {...typographyProps}  />
             ) : (
                 <Typography {...typographyProps}>{data}</Typography>
             )}
