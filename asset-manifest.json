@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/FBTC-Tool-WebUI/static/css/main.10894907.css",
-    "main.js": "/FBTC-Tool-WebUI/static/js/main.1af74899.js",
+    "main.js": "/FBTC-Tool-WebUI/static/js/main.9844905e.js",
     "static/js/3326.eb5d777c.chunk.js": "/FBTC-Tool-WebUI/static/js/3326.eb5d777c.chunk.js",
     "static/js/9658.e04e44c9.chunk.js": "/FBTC-Tool-WebUI/static/js/9658.e04e44c9.chunk.js",
     "static/js/3631.92e2a587.chunk.js": "/FBTC-Tool-WebUI/static/js/3631.92e2a587.chunk.js",
@@ -82,6 +82,6 @@
   },
   "entrypoints": [
     "static/css/main.10894907.css",
-    "static/js/main.1af74899.js"
+    "static/js/main.9844905e.js"
   ]
 }
