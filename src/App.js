@@ -12,6 +12,7 @@ import { Link, useLocation } from 'react-router-dom';
 const customNetworkContext = createContext();
 
 function App() {
+    const basename = process.env.PUBLIC_URL;
     const queryClient = new QueryClient();
     const [customNetwork, setCustomNetwork] = useState(null);
     const location = useLocation();
@@ -39,9 +40,9 @@ function App() {
                             <Wallet />
                             <Paper elevation={3} sx={{ minWidth: '90vw', maxWidth: '90vw' }}>
                                 <Tabs value={getTabValue()} centered>
-                                    <Tab label={'Display'} value={0} component={Link} to={'/display'} />
-                                    <Tab label={'Operation'} value={1} component={Link} to={'/operation'} />
-                                    <Tab label={'Request'} value={2} component={Link} to={'/request'} />
+                                    <Tab label={'Display'} value={0} component={Link} to={`${basename}/display`} />
+                                    <Tab label={'Operation'} value={1} component={Link} to={`${basename}/operation`} />
+                                    <Tab label={'Request'} value={2} component={Link} to={`${basename}/request`} />
                                 </Tabs>
                             </Paper>
                             <Router />
