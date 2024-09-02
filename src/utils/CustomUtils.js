@@ -4,8 +4,8 @@ import { useChainId } from "wagmi";
 import networks from './networks.json';
 
 const BTC_EXPLORER_MAP = {
-    1 : 'https://mempool.space',
-    3 : 'https://mempool.space/testnet',
+    '0x0100000000000000000000000000000000000000000000000000000000000000' : 'https://mempool.space',
+    '0x0110000000000000000000000000000000000000000000000000000000000000' : 'https://mempool.space/testnet',
 }
 
 

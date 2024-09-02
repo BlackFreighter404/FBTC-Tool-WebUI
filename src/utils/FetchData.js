@@ -128,6 +128,14 @@ class Viewer {
         }
     }
 
+    async parseChainId(chainIdStr){
+        if (chainIdStr in this.FBTC_CHAIN_ID_TO_NAME) {
+            return chainIdStr;
+        } else {
+            return parseInt(chainIdStr, 16);
+        }
+    }
+
 
     async getRoleList(contact, roleMethod, with_balance = true) {
         const role = await roleMethod();
@@ -518,8 +526,8 @@ class Viewer {
     async getRequestData(queryNum) {
         const bridge = getContract({ abi: this.bridge_abi, address: this.bridgeAddr, client: this.publicClient });
         const nonce = await bridge.read.nonce();
-        const end = Number(nonce) - 1;
-        const start = end - 100 + 1;
+        const end = Math.max(Number(nonce) - 1, 0);
+        const start = Math.max(end - 100 + 1, 0);
         let reqs = await bridge.read.getRequestsByIdRange([start, end]);
         reqs = reqs.reverse().slice(0, queryNum);
         console.log('reqs', reqs);
@@ -528,8 +536,8 @@ class Viewer {
             req.nonce = Number(req.nonce);
             req.fee = Number(req.fee);
             req.amount = Number(req.amount);
-            req.src_chain_id = Number(req.srcChain);
-            req.dst_chain_id = Number(req.dstChain);
+            req.src_chain_id = await this.parseChainId(req.srcChain);
+            req.dst_chain_id = await this.parseChainId(req.dstChain);
             if (req.status === 1) {
                 req.totalStatus = 'Pending';
             } else if (req.op === 3) {
