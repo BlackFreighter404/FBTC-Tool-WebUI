@@ -15,15 +15,15 @@ const BridgePanel = ({ data }) => {
 
     return (
         <Box display='flex' justifyContent='center' alignItems='center' flexDirection='column' gap={1} p={1}>
-            <AddressTypo variant="h5" gutterBottom address={data?.address} text={data?.address}/>
+            <AddressTypo variant="body2" gutterBottom address={data?.address} text={data?.address}/>
             <Card elevation={3} sx={{ minWidth: '85vw', maxWidth: '85vw', p: 1 , backgroundColor : 'lightblue'}}>
-                <Panel address={data?.address} func={addMintRequest} abi={bridgeABI}  text={'addMintRequest (base unit 1 BTC == 10^8 sat)'}/>
+                <Panel address={data?.address} func={addMintRequest} abi={bridgeABI}  text={'(base unit 1 BTC == 10^8 sat)'}/>
             </Card>
             <Card elevation={3} sx={{ minWidth: '85vw', maxWidth: '85vw', p: 1 , backgroundColor : 'lightblue'}}>
-                <Panel address={data?.address} func={addBurnRequest} abi={bridgeABI}  text={'addBurnRequest (base unit 1 BTC == 10^8 sat)'}/>
+                <Panel address={data?.address} func={addBurnRequest} abi={bridgeABI}  text={'(base unit 1 BTC == 10^8 sat)'}/>
             </Card>
             <Card elevation={3} sx={{ minWidth: '85vw', maxWidth: '85vw', p: 1, backgroundColor : 'lightblue'}}>
-                <Panel address={data?.address} func={addCrosschainRequest} abi={bridgeABI}  text={'addCrosschainRequest (base unit 1 BTC == 10^8 sat)'}/>
+                <Panel address={data?.address} func={addCrosschainRequest} abi={bridgeABI}  text={'(base unit 1 BTC == 10^8 sat)'}/>
             </Card>
         </Box>
     )

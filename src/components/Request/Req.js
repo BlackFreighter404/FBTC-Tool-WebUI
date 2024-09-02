@@ -3,7 +3,7 @@ import { TextTableCell } from "../../utils/CustomUtils";
 
 const Req = ({ data }) => {
     return (
-        <Card sx={{ backgroundColor: 'seashell', minWidth: '80vw', maxWidth: '80vw', }}>
+        <Card sx={{ backgroundColor: 'seashell', minWidth: '80vw', maxWidth: '80vw', overflowX: 'auto' }}>
             <Table>
                 <TableBody>
                     <TableRow>

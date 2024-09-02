@@ -1,4 +1,4 @@
-import { TableCell, Typography, Link } from "@mui/material";
+import { TableCell, Typography, Link, Box, Divider } from "@mui/material";
 import React from "react";
 import { useChainId } from "wagmi";
 import networks from './networks.json';
@@ -28,7 +28,7 @@ const AddressTypo = ({ text, address, chainId = null, ...typographyProps }) => {
     }
 
     return (
-        <Typography component="span" {...typographyProps} style={{ fontWeight: 'bold' }}>
+        <Typography component="span" {...typographyProps} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 'Medium' }} >
             <Link href={`${explorerUrl}/address/${address}`} underline="hover" color="inherit" rel="noopener" target="_blank">
                 {text}
             </Link>
@@ -41,12 +41,14 @@ const AddressList = ({ data }) => {
         <React.Fragment>
             {
                 data ? (
-                    data.map((item, index) => (
-                        <React.Fragment key={index}>
-                            <AddressTypo text={item.addressInfo} address={item.address} />
-                            <br />
-                        </React.Fragment>
-                    ))
+                    <Box display="flex" flexDirection="column" gap={1}>
+                        {data.map((item, index) => (
+                            <li key={index} >
+                                <AddressTypo text={item.addressInfo} address={item.address} />
+                                <Divider />
+                            </li>
+                        ))}
+                    </Box>
                 ) : (
                     <Typography>Loading...</Typography>
                 )
@@ -58,7 +60,7 @@ const AddressList = ({ data }) => {
 const TextTableCell = ({ data, address, chainId = null, ...typographyProps }) => {
     if (data == null) data = "Loading...";
     return (
-        <TableCell style={{ whiteSpace: 'normal', wordBreak: 'break-word' }} sx={{ minWidth: '100px' }}>
+        <TableCell sx={{ minWidth: '100px' }}>
             {address != null ? (
                 <AddressTypo text={data} address={address} chainId={chainId} {...typographyProps} />
             ) : (

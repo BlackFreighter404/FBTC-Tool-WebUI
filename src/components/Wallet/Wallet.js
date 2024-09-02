@@ -10,7 +10,9 @@ const Wallet = () => {
         <AppBar position="static">
             <Toolbar>
                 <Box display="flex" flexDirection="row" justifyContent="space-between" width="100%" alignItems="center">
-                    <Typography variant="h6"> FBTC Tool WebUI </Typography>
+                    <Box maxWidth='20vw' sx={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+                    <Typography variant="h6" > FBTC Tool WebUI </Typography>
+                    </Box>
                     <Box display="flex" flexDirection="row" gap={2} justifyContent='center' alignContent={'center'}>
                         {account.status !== 'connected' && <ChainModel />}
                         <Box minWidth={100} mt={0.5}>

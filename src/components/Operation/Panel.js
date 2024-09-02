@@ -136,7 +136,8 @@ const Panel = ({ address, func, abi, text=null }) => {
     }
     return (
         <Box display={'flex'} flexDirection={'column'} p={2} border={1} borderRadius={2} borderColor="grey.300" sx={{ backgroundColor: 'white' }}>
-            <Typography variant="h6" gutterBottom>{text ? text : func.name}</Typography>
+            <Typography variant="subtitle2" gutterBottom>{func.name}</Typography>
+            {text && <Typography variant="caption" gutterBottom sx={{textTransform : 'none'}}>{text}</Typography>}
             {funABI && renderInputs(funABI.inputs)}
             {IsConnectButton(status)}
             {error && <Typography variant="caption" color="error">{error}</Typography>}
