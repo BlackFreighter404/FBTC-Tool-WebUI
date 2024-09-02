@@ -12,7 +12,7 @@ const Req = ({ data }) => {
                     </TableRow>
                     <TableRow>
                         <TextTableCell data={'Total Status'} />
-                        <TextTableCell data={data?.totalStatus} sx={{ color: 'Comfirmed' in data?.totalStatus ? 'green' : 'red' }} />
+                        <TextTableCell data={data?.totalStatus} sx={{ color: data?.totalStatus.indexOf('Confirmed') !== -1 ? 'green' : 'red' }} />
                     </TableRow>
                     <TableRow>
                         <TextTableCell data={'Hash'} />
