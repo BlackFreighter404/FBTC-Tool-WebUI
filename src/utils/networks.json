@@ -104,5 +104,20 @@
       "https://explorer.sepolia.mantle.xyz"
     ],
     "bridge" : "0x0aD89E552ed249a8A60729214e8F5e483f317F47"
+  },
+  {
+    "chainName": "BOB Mainnet",
+    "chainId": 60808,
+    "nativeCurrency": {
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://rpc.gobob.xyz"
+    ],
+    "blockExplorerUrls": [
+      "https://explorer.gobob.xyz"
+    ],
+    "bridge" : "0xbee335BB44e75C4794a0b9B54E8027b111395943"
   }
 ]
