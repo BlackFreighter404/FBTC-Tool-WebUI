@@ -1,6 +1,6 @@
 import { TableCell, Typography, Link, Box, Divider } from "@mui/material";
 import React from "react";
-import { useChainId } from "wagmi";
+import { useChainId } from "./Hooks";
 import networks from './networks.json';
 
 const BTC_EXPLORER_MAP = {

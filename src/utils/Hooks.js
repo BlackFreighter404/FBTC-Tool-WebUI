@@ -45,4 +45,18 @@ const useFetchData = (fetchDataFucntion) => {
     return data;
 }
 
+
+const useChainId = () => {
+    const { customNetwork } = useContext(customNetworkContext);
+    const account = useAccount();
+    if (account.status === 'connected') {
+        return account.chainId;
+    }
+    if (customNetwork !== null) {
+        return customNetwork.id;
+    }
+    return null;
+}
+
 export default useFetchData;
+export { useChainId };
