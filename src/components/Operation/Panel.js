@@ -38,6 +38,17 @@ function convertToArgs(abiInputs, inputs) {
             if (abiInput.name === '_amount') {
                 return inputs[abiInput.name] * 10 ** 8;
             }
+            if (abiInput.name === '_targetAddress') {
+                let value = inputs[abiInput.name]
+                if (value.length === 42){
+                    // 0x{40} => 0x{64}
+                    value = '0x000000000000000000000000' + value.slice(2);
+                }
+                if (value.length !== 66){
+                    throw Error(`Invalid _targetAddress ${inputs[abiInput.name]}`);
+                }
+                return value;
+            }
             return inputs[abiInput.name];
         }
     });
