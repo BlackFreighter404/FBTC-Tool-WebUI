@@ -131,7 +131,22 @@
       "https://rpc.soniclabs.com"
     ],
     "blockExplorerUrls": [
-      "https://sonicscan.org/"
+      "https://sonicscan.org"
+    ],
+    "bridge" : "0xbee335BB44e75C4794a0b9B54E8027b111395943"
+  },
+  {
+    "chainName": "Corn Maizenet",
+    "chainId": 21000000,
+    "nativeCurrency": {
+      "symbol": "BTCN",
+      "decimals": 18
+    },
+    "rpcUrls": [
+      "https://mainnet.corn-rpc.com"
+    ],
+    "blockExplorerUrls": [
+      "https://cornscan.io"
     ],
     "bridge" : "0xbee335BB44e75C4794a0b9B54E8027b111395943"
   }
